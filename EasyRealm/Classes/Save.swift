@@ -34,18 +34,26 @@ fileprivate extension EasyRealm where T: Object {
     }
     return try rq.queue.sync {
       guard let object = rq.realm.resolve(ref) else { throw EasyRealmError.ObjectCantBeResolved }
-      rq.realm.beginWrite()
+      if !rq.realm.isInWriteTransaction {
+        rq.realm.beginWrite()
+      }
       let ret = rq.realm.create(T.self, value: object, update: update)
-      try rq.realm.commitWrite()
+      if !rq.realm.isInWriteTransaction {
+        try rq.realm.commitWrite()
+      }
       return ret
     }
   }
   
   fileprivate func unmanaged_save(update:Bool) throws -> T {
     let realm = try Realm()
-    realm.beginWrite()
+    if !realm.isInWriteTransaction {
+      realm.beginWrite()
+    }
     let ret = realm.create(T.self, value: self.base, update: update)
-    try realm.commitWrite()
+    if !realm.isInWriteTransaction {
+      try realm.commitWrite()
+    }
     return ret
   }
   
